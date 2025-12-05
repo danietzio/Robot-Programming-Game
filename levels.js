@@ -741,7 +741,7 @@ function saveFunction() {
   showMessage("Function saved! Click patrol() to execute it.", "success")
 }
 
-function executePatrol() {
+async function executePatrol() {
   if (!game.functions.patrol || !Array.isArray(game.functions.patrol)) {
     showMessage(
       "No patrol function saved. Please create a sequence first!",
@@ -764,8 +764,9 @@ function executePatrol() {
         game.robot.direction = "east"
       }
       game.move()
+      game.updateDisplay()
+      await game.delay(400)
     }
-    game.updateDisplay()
     checkGoal()
   } catch (error) {
     showMessage(error.message, "error")
@@ -871,7 +872,9 @@ async function executeLevel2() {
 
       // First phase: Move right until reaching the rightmost column (x = 4)
       while (game.variables.energy > 0 && game.robot.x < 4) {
-        game.move()
+      game.move()
+      game.updateDisplay()
+      await game.delay(400)
       }
 
       // Second phase: Change direction to north and move up until reaching flag or energy runs out
@@ -879,6 +882,8 @@ async function executeLevel2() {
         game.robot.direction = "north"
         while (game.variables.energy > 0 && game.robot.y > 0) {
           game.move()
+        game.updateDisplay()
+        await game.delay(400)
           // Check if we reached the flag
           if (game.checkGoal()) {
             break
@@ -1036,7 +1041,7 @@ function nextChallenge() {
     currentChallengeNum++
     loadLevel3()
   } else {
-    showMessage("🎊 Congratulations! You completed all challenges!", "success")
+    showCompletionOverlay()
   }
 }
 
@@ -1052,6 +1057,28 @@ function showMessage(text, type) {
 
 // Initialize
 document.addEventListener("DOMContentLoaded", () => {
+  const introOverlay = document.getElementById("intro-overlay")
+  const completionOverlay = document.getElementById("completion-overlay")
+  const startBtn = document.getElementById("start-game-btn")
+  const restartBtn = document.getElementById("restart-game-btn")
+
+  const startGame = () => {
+    if (introOverlay) introOverlay.classList.remove("active")
+    currentLevelNum = 1
+    currentChallengeNum = 0
+    loadLevel(1)
+  }
+
+  const resetToStart = () => {
+    currentLevelNum = 1
+    currentChallengeNum = 0
+    if (completionOverlay) completionOverlay.classList.remove("active")
+    loadLevel(1)
+  }
+
+  if (startBtn) startBtn.addEventListener("click", startGame)
+  if (restartBtn) restartBtn.addEventListener("click", resetToStart)
+
   // Level selector buttons
   document.querySelectorAll(".level-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1059,6 +1086,15 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   })
 
-  // Load Level 1 by default
-  loadLevel(1)
+  // Show intro overlay by default
+  if (introOverlay) {
+    introOverlay.classList.add("active")
+  }
 })
+
+function showCompletionOverlay() {
+  const completionOverlay = document.getElementById("completion-overlay")
+  if (completionOverlay) {
+    completionOverlay.classList.add("active")
+  }
+}
