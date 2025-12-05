@@ -314,10 +314,10 @@ function renderLevel1Controls(type) {
             <div class="function-builder">
                 <label>Build your sequence:</label>
                 <div class="arrow-buttons">
-                    <button class="arrow-btn" onclick="addToSequence('up')">↑</button>
-                    <button class="arrow-btn" onclick="addToSequence('left')">←</button>
-                    <button class="arrow-btn" onclick="addToSequence('down')">↓</button>
-                    <button class="arrow-btn" onclick="addToSequence('right')">→</button>
+                    <button class="arrow-btn" onclick="addToSequence('up')" style="grid-column: 2; grid-row: 1;">↑</button>
+                    <button class="arrow-btn" onclick="addToSequence('left')" style="grid-column: 1; grid-row: 2;">←</button>
+                    <button class="arrow-btn" onclick="addToSequence('down')" style="grid-column: 2; grid-row: 2;">↓</button>
+                    <button class="arrow-btn" onclick="addToSequence('right')" style="grid-column: 3; grid-row: 2;">→</button>
                 </div>
                 <div class="sequence-display" id="sequence-display"></div>
                 <button class="btn function-btn" onclick="saveFunction()">Save as patrol()</button>
@@ -872,9 +872,9 @@ async function executeLevel2() {
 
       // First phase: Move right until reaching the rightmost column (x = 4)
       while (game.variables.energy > 0 && game.robot.x < 4) {
-      game.move()
-      game.updateDisplay()
-      await game.delay(400)
+        game.move()
+        game.updateDisplay()
+        await game.delay(400)
       }
 
       // Second phase: Change direction to north and move up until reaching flag or energy runs out
@@ -882,8 +882,8 @@ async function executeLevel2() {
         game.robot.direction = "north"
         while (game.variables.energy > 0 && game.robot.y > 0) {
           game.move()
-        game.updateDisplay()
-        await game.delay(400)
+          game.updateDisplay()
+          await game.delay(400)
           // Check if we reached the flag
           if (game.checkGoal()) {
             break
@@ -1041,7 +1041,16 @@ function nextChallenge() {
     currentChallengeNum++
     loadLevel3()
   } else {
-    showCompletionOverlay()
+    if (currentLevelNum === 3) {
+      // Only show full completion overlay after finishing the last level
+      showCompletionOverlay()
+    } else {
+      // For earlier levels, just acknowledge completion
+      showMessage(
+        "🎉 Great job! You completed this level. Select the next level to continue.",
+        "success"
+      )
+    }
   }
 }
 
