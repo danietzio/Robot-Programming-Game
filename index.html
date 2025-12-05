@@ -15,6 +15,39 @@
         </p>
       </header>
 
+      <!-- Intro / onboarding overlay -->
+      <div id="intro-overlay" class="overlay active">
+        <div class="overlay-content">
+          <h2>Welcome, coder!</h2>
+          <p>
+            Learn core programming ideas by guiding your robot through puzzles.
+            You&apos;ll explore variables, loops, conditionals, functions, and
+            writing your own code. Ready to start?
+          </p>
+          <button id="start-game-btn" class="btn btn-primary">
+            Start the adventure
+          </button>
+        </div>
+      </div>
+
+      <!-- Completion overlay -->
+      <div id="completion-overlay" class="overlay">
+        <div class="overlay-content">
+          <h2>Great job, you finished all levels! 🎉</h2>
+          <p class="summary-title">What you practiced:</p>
+          <ul class="summary-list">
+            <li>Level 1: Keywords — variables, repeat loops, if checks, building functions</li>
+            <li>Level 2: Combination — filling code, repeat/if/while, energy tracking</li>
+            <li>Level 3: Supplementation — writing your own repeat, if, while logic</li>
+          </ul>
+          <div class="overlay-actions">
+            <button id="restart-game-btn" class="btn btn-secondary">
+              Play again from Level 1
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="level-selector">
         <button class="level-btn" data-level="1">Level 1: Keywords</button>
         <button class="level-btn" data-level="2">Level 2: Combination</button>
