@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Robot Programming Game - Learn JavaScript</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🤖 Robot Programming Game</h1>
+        <p class="subtitle">
+          Serious Game - Learn JavaScript by controlling a robot!
+        </p>
+      </header>
+
+      <div class="level-selector">
+        <button class="level-btn" data-level="1">Level 1: Keywords</button>
+        <button class="level-btn" data-level="2">Level 2: Combination</button>
+        <button class="level-btn" data-level="3">
+          Level 3: Supplementation
+        </button>
+      </div>
+
+      <div id="game-container" class="game-container">
+        <!-- Level content will be dynamically loaded here -->
+      </div>
+
+      <div id="variables-display" class="variables-display">
+        <div class="var-item">
+          <span class="var-label">Energy:</span>
+          <span id="energy-value" class="var-value">10</span>
+        </div>
+        <div class="var-item">
+          <span class="var-label">Gems Collected:</span>
+          <span id="gems-value" class="var-value">0</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script src="levels.js"></script>
+  </body>
+</html>
