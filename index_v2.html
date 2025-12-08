@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Robot Programming Game - Learn JavaScript</title>
+    <script>
+      window.__VERSION__ = 'v2';
+    </script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>🤖 Robot Programming Game</h1>
+        <p class="subtitle">
+          Serious Game - Learn JavaScript by controlling a robot!
+        </p>
+      </header>
+
+      <!-- Intro / onboarding overlay -->
+      <div id="intro-overlay" class="overlay active">
+        <div class="overlay-content">
+          <h2>Welcome, coder!</h2>
+          <p>
+            Learn core programming ideas by guiding your robot through puzzles.
+            You&apos;ll explore variables, loops, conditionals, functions, and
+            writing your own code. Ready to start?
+          </p>
+          <button id="start-game-btn" class="btn btn-primary">
+            Start the adventure
+          </button>
+        </div>
+      </div>
+
+      <!-- Completion overlay -->
+      <div id="completion-overlay" class="overlay">
+        <div class="overlay-content">
+          <h2>Great job, you finished all levels! 🎉</h2>
+          <p class="summary-title">What you practiced:</p>
+          <ul class="summary-list">
+            <li>Level 1: Keywords — variables, repeat loops, if checks, building functions</li>
+            <li>Level 2: Combination — filling code, repeat/if/while, energy tracking</li>
+            <li>Level 3: Supplementation — writing your own repeat, if, while logic</li>
+          </ul>
+          <div class="overlay-actions">
+            <button id="restart-game-btn" class="btn btn-secondary">
+              Play again from Level 1
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="level-selector">
+        <button class="level-btn" data-level="1">Level 1: Keywords</button>
+        <button class="level-btn" data-level="2">Level 2: Combination</button>
+        <button class="level-btn" data-level="3">
+          Level 3: Supplementation
+        </button>
+      </div>
+
+      <div id="game-container" class="game-container">
+        <!-- Level content will be dynamically loaded here -->
+      </div>
+
+      <div id="variables-display" class="variables-display">
+        <div class="var-item">
+          <span class="var-label">Energy:</span>
+          <span id="energy-value" class="var-value">10</span>
+        </div>
+        <div class="var-item">
+          <span class="var-label">Gems Collected:</span>
+          <span id="gems-value" class="var-value">0</span>
+        </div>
+      </div>
+    </div>
+
+    <script src="game.js"></script>
+    <script src="levels.js"></script>
+    <style>
+      /* Extra hint box only for V2 */
+      .next-hint {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        border-left: 4px solid #2196f3;
+        background: #e3f2fd;
+        color: #0d47a1;
+        font-weight: 600;
+        font-size: 0.95em;
+      }
+    </style>
+    <script>
+      // V2-only helper: show next-tile safety hint to speed up completion
+      document.addEventListener("DOMContentLoaded", () => {
+        // Create a single hint box instance
+        const hintBox = document.createElement("div");
+        hintBox.id = "next-hint-box";
+        hintBox.className = "next-hint";
+        hintBox.textContent = "Next tile: …";
+
+        // Helper to place the hint above the challenge/puzzle description
+        const placeHint = () => {
+          const desc = document.querySelector(".controls-panel .challenge-description");
+          if (desc && hintBox.parentElement !== desc.parentElement) {
+            desc.parentElement.insertBefore(hintBox, desc);
+          }
+        };
+
+        // Observe DOM changes to re-place the hint when panels change
+        const observer = new MutationObserver(() => placeHint());
+        observer.observe(document.body, { childList: true, subtree: true });
+        placeHint();
+
+        // Monkey-patch updateDisplay to add a hint about the next tile
+        const originalUpdate = game.updateDisplay.bind(game);
+        game.updateDisplay = function () {
+          originalUpdate();
+          const hint = document.getElementById("next-hint-box");
+          if (!hint) return;
+
+          // Determine the next tile in front of the robot
+          let checkX = this.robot.x;
+          let checkY = this.robot.y;
+          switch (this.robot.direction) {
+            case "north":
+              checkY--;
+              break;
+            case "east":
+              checkX++;
+              break;
+            case "south":
+              checkY++;
+              break;
+            case "west":
+              checkX--;
+              break;
+          }
+
+          // Bounds check
+          if (checkX < 0 || checkX >= 5 || checkY < 0 || checkY >= 5) {
+            hint.textContent = "Next tile: out of bounds";
+            hint.style.borderLeftColor = "#f44336";
+            return;
+          }
+
+          const nextTile = this.grid[checkY][checkX];
+          if (nextTile.isWall) {
+            hint.textContent = "Next tile: wall ahead";
+            hint.style.borderLeftColor = "#f44336";
+          } else if (nextTile.isDanger) {
+            hint.textContent = "Next tile: danger (red) — use IF!";
+            hint.style.borderLeftColor = "#f44336";
+          } else if (nextTile.hasGem) {
+            hint.textContent = "Next tile: gem ahead — pick it up!";
+            hint.style.borderLeftColor = "#4caf50";
+          } else if (nextTile.hasFlag) {
+            hint.textContent = "Next tile: flag ahead — reach it!";
+            hint.style.borderLeftColor = "#4caf50";
+          } else if (nextTile.isSafe) {
+            hint.textContent = "Next tile: safe (green)";
+            hint.style.borderLeftColor = "#4caf50";
+          } else {
+            hint.textContent = "Next tile: empty";
+            hint.style.borderLeftColor = "#2196f3";
+          }
+        };
+      });
+    </script>
+  </body>
+</html>
