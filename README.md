@@ -85,7 +85,7 @@ No external libraries.
 Clone and open the file:
 
 ```bash
-git clone https://github.com/yourname/robocode-grid.git
+git clone https://github.com/danietzio/Robot-Programming-Game.git
 cd robocode-grid
 open RoboCode_Game.html   # or double-click
 ```
