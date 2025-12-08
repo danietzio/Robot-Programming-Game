@@ -86,7 +86,7 @@ Clone and open the file:
 
 ```bash
 git clone https://github.com/danietzio/Robot-Programming-Game.git
-cd robocode-grid
+cd Robot-Programming-Game
 open RoboCode_Game.html   # or double-click
 ```
 
