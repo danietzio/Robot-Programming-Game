@@ -1,0 +1,535 @@
+import { RobotGame } from "./GameLogic.js";
+import { UIManager } from "./UIManager.js";
+import { level1Challenges } from "./levels/level1.js";
+import { level2Puzzles } from "./levels/level2.js";
+import { level3Challenges } from "./levels/level3.js";
+
+const game = new RobotGame();
+const ui = new UIManager(game);
+
+let currentLevelNum = 1;
+let currentChallengeNum = 0;
+
+function getCurrentChallengeObject() {
+  if (currentLevelNum === 1) return level1Challenges[currentChallengeNum];
+  if (currentLevelNum === 2) return level2Puzzles[currentChallengeNum];
+  if (currentLevelNum === 3) return level3Challenges[currentChallengeNum];
+  return null;
+}
+
+function checkGoal() {
+  if (game.checkGoal()) {
+    ui.showMessage("🎉 Success! Goal achieved!", "success");
+    setTimeout(nextChallenge, 2000);
+  }
+}
+
+function nextChallenge() {
+  if (currentLevelNum === 1) {
+    if (currentChallengeNum < level1Challenges.length - 1) {
+      currentChallengeNum++;
+      window.loadLevel(1);
+    } else {
+      ui.showMessage("Level 1 Complete! Moving to Level 2...", "success");
+      // Reset challenge num for the NEW level
+      currentChallengeNum = 0;
+      setTimeout(() => window.loadLevel(2), 1500);
+    }
+  } else if (currentLevelNum === 2) {
+    if (currentChallengeNum < level2Puzzles.length - 1) {
+      currentChallengeNum++;
+      window.loadLevel(2);
+    } else {
+      ui.showMessage("Level 2 Complete! Moving to Level 3...", "success");
+      // Reset challenge num for the NEW level
+      currentChallengeNum = 0;
+      setTimeout(() => window.loadLevel(3), 1500);
+    }
+  } else if (currentLevelNum === 3) {
+    if (currentChallengeNum < level3Challenges.length - 1) {
+      currentChallengeNum++;
+      window.loadLevel(3);
+    } else {
+      document.getElementById("completion-overlay").classList.add("active");
+    }
+  }
+}
+
+// --- MODIFIED FUNCTION ---
+window.loadLevel = (levelNum) => {
+  currentLevelNum = levelNum;
+  // REMOVED: currentChallengeNum = 0;  <-- This was the bug causing the loop!
+
+  document.querySelectorAll(".level-btn").forEach((btn) => {
+    btn.classList.remove("active");
+    if (parseInt(btn.dataset.level) === levelNum) btn.classList.add("active");
+  });
+
+  const challenge = getCurrentChallengeObject();
+  if (!challenge) return;
+
+  game.setLevelConfig(challenge.config);
+  game.currentChallenge = challenge;
+  if (challenge.type === "function") game.sequence = [];
+
+  ui.loadLevelUI(levelNum, challenge, currentChallengeNum);
+  ui.updateDisplay();
+};
+
+window.resetChallenge = () => {
+  game.reset();
+  ui.updateDisplay();
+
+  if (game.currentChallenge && game.currentChallenge.type === "function") {
+    game.sequence = [];
+    ui.updateSequenceDisplay(game.sequence);
+    const funcButtons = document.getElementById("function-buttons");
+    if (funcButtons) funcButtons.innerHTML = "";
+  }
+  const codeInput = document.getElementById("code-input");
+  if (codeInput) codeInput.value = "";
+};
+
+window.toggleHint = () => {
+  document.getElementById("hint-box").classList.toggle("show");
+};
+
+window.moveRobot = (direction) => {
+  try {
+    if (direction === "up") game.robot.direction = "north";
+    if (direction === "down") game.robot.direction = "south";
+    if (direction === "left") game.robot.direction = "west";
+    if (direction === "right") game.robot.direction = "east";
+
+    game.move();
+    ui.updateDisplay();
+    checkGoal();
+  } catch (error) {
+    ui.showMessage(error.message, "error");
+    setTimeout(() => {
+      window.resetChallenge();
+      ui.showMessage("Resetting...", "error");
+    }, 1000);
+  }
+};
+
+window.moveWithSafety = (direction) => {
+  const safetyToggle = document.getElementById("safety-mode-toggle");
+  const isSafetyOn = safetyToggle ? safetyToggle.checked : false;
+
+  if (direction === "up") game.robot.direction = "north";
+  if (direction === "down") game.robot.direction = "south";
+  if (direction === "left") game.robot.direction = "west";
+  if (direction === "right") game.robot.direction = "east";
+
+  let checkX = game.robot.x;
+  let checkY = game.robot.y;
+  if (direction === "up") checkY--;
+  if (direction === "down") checkY++;
+  if (direction === "left") checkX--;
+  if (direction === "right") checkX++;
+
+  if (checkX < 0 || checkX >= 5 || checkY < 0 || checkY >= 5) {
+    ui.showMessage("Cannot move there (Wall/Boundary)", "error");
+    setTimeout(() => window.resetChallenge(), 1000);
+    return;
+  }
+
+  const nextTile = game.grid[checkY][checkX];
+
+  if (isSafetyOn) {
+    if (nextTile.isDanger) {
+      ui.showMessage(
+        "⚠️ Safety System Active: Danger detected! Robot refused to move.",
+        "success"
+      );
+      ui.updateDisplay();
+      return;
+    } else {
+      try {
+        game.move();
+        ui.showMessage("Safety System Active: Path clear. Moving.", "success");
+      } catch (e) {
+        ui.showMessage(e.message, "error");
+        setTimeout(window.resetChallenge, 1000);
+      }
+    }
+  } else {
+    if (nextTile.isDanger) {
+      try {
+        game.move();
+        ui.updateDisplay();
+        ui.showMessage(
+          "❌ CRITICAL: Safety was OFF! Robot stepped on danger.",
+          "error"
+        );
+        setTimeout(() => window.resetChallenge(), 1000);
+      } catch (e) {
+        ui.showMessage(e.message, "error");
+        setTimeout(window.resetChallenge, 1000);
+      }
+    } else {
+      try {
+        game.move();
+      } catch (e) {
+        ui.showMessage(e.message, "error");
+        setTimeout(window.resetChallenge, 1000);
+      }
+    }
+  }
+  ui.updateDisplay();
+  checkGoal();
+};
+
+window.executeLoop = async () => {
+  const countInput = document.getElementById("loop-count").value;
+  if (!countInput) {
+    ui.showMessage("Enter a number!", "error");
+    return;
+  }
+
+  const count = parseInt(countInput);
+  game.reset();
+
+  try {
+    for (let i = 0; i < count; i++) {
+      game.pickUp();
+      game.move();
+      ui.updateDisplay();
+      await game.delay(400);
+    }
+    checkGoal();
+  } catch (error) {
+    ui.showMessage(error.message, "error");
+    setTimeout(window.resetChallenge, 1000);
+  }
+};
+
+window.addToSequence = (direction) => {
+  game.sequence.push(direction);
+  ui.updateSequenceDisplay(game.sequence);
+};
+
+window.saveFunction = () => {
+  if (game.sequence.length === 0) {
+    ui.showMessage("Sequence is empty!", "error");
+    return;
+  }
+  game.functions.patrol = [...game.sequence];
+  const funcButtons = document.getElementById("function-buttons");
+  funcButtons.innerHTML =
+    '<button class="btn function-btn" onclick="executePatrol()">Execute patrol()</button>';
+  ui.showMessage("Function saved!", "success");
+};
+
+window.executePatrol = async () => {
+  if (!game.functions.patrol) return;
+  game.reset();
+  try {
+    for (const dir of game.functions.patrol) {
+      if (dir === "up") game.robot.direction = "north";
+      else if (dir === "down") game.robot.direction = "south";
+      else if (dir === "left") game.robot.direction = "west";
+      else if (dir === "right") game.robot.direction = "east";
+
+      game.move();
+      ui.updateDisplay();
+      await game.delay(400);
+    }
+    checkGoal();
+  } catch (error) {
+    ui.showMessage(error.message, "error");
+    setTimeout(window.resetChallenge, 1000);
+  }
+};
+
+window.executeLevel2 = async () => {
+  const puzzle = level2Puzzles[currentChallengeNum];
+  game.reset();
+
+  const answers = [];
+  for (let index = 0; index < puzzle.blanks.length; index++) {
+    const element = document.getElementById(`blank-${index}`);
+    if (!element.value) {
+      ui.showMessage("Please fill in all blanks.", "error");
+      return;
+    }
+    answers.push(
+      puzzle.blanks[index].type === "number"
+        ? parseInt(element.value)
+        : element.value
+    );
+  }
+
+  let allCorrect = true;
+  puzzle.blanks.forEach((blank, index) => {
+    if (answers[index] !== blank.answer) allCorrect = false;
+  });
+
+  if (!allCorrect) {
+    ui.showMessage("Incorrect parameters/keywords. Try again!", "error");
+    return;
+  }
+
+  try {
+    let keyword = "";
+    if (puzzle.blanks[0].type === "dropdown") {
+      keyword = answers[0];
+    } else {
+      if (puzzle.code.includes("repeat")) keyword = "repeat";
+      else if (puzzle.code.includes("if")) keyword = "if";
+      else if (puzzle.code.includes("while")) keyword = "while";
+    }
+
+    if (keyword === "repeat") {
+      const count =
+        typeof answers[0] === "number" ? answers[0] : answers[1] || 3;
+      for (let i = 0; i < count; i++) {
+        game.move();
+        if (puzzle.title.includes("Loop Count")) game.pickUp();
+        ui.updateDisplay();
+        await game.delay(400);
+      }
+    } else if (keyword === "if") {
+      if (game.gemAhead()) {
+        await game.delay(200);
+        game.move();
+        ui.updateDisplay();
+        await game.delay(400);
+        game.pickUp();
+        ui.updateDisplay();
+        await game.delay(400);
+      }
+    } else if (keyword === "while") {
+      while (game.variables.energy > 0 && game.robot.x < 4) {
+        game.move();
+        ui.updateDisplay();
+        await game.delay(300);
+      }
+      game.robot.direction = "north";
+      while (game.variables.energy > 0 && game.robot.y > 0) {
+        game.move();
+        ui.updateDisplay();
+        await game.delay(300);
+      }
+    }
+    checkGoal();
+  } catch (error) {
+    ui.showMessage(error.message, "error");
+    setTimeout(() => game.reset(), 1000);
+  }
+};
+
+async function performAction(action) {
+  if (action === "move") game.move();
+  if (action === "pickUp") game.pickUp();
+  if (action === "turnLeft") game.robot.direction = "west";
+  if (action === "turnRight") game.robot.direction = "east";
+  ui.updateDisplay();
+  await game.delay(300);
+}
+
+async function executeBlock(bodyString) {
+  const commandRegex = /(move|pickUp|turnLeft|turnRight)\s*\(\s*\)/g;
+  let match;
+  while ((match = commandRegex.exec(bodyString)) !== null) {
+    await performAction(match[1]);
+  }
+}
+
+function findClosingBrace(str, startIndex) {
+  let depth = 1;
+  for (let i = startIndex; i < str.length; i++) {
+    if (str[i] === "{") depth++;
+    if (str[i] === "}") depth--;
+    if (depth === 0) return i;
+  }
+  return -1;
+}
+
+window.executeLevel3 = async () => {
+  const challenge = level3Challenges[currentChallengeNum];
+  const codeInput = document.getElementById("code-input").value;
+
+  if (!codeInput.trim()) {
+    ui.showMessage("Write some code first!", "error");
+    return;
+  }
+
+  const explicitMoveCount = (codeInput.match(/move\s*\(\s*\)/g) || []).length;
+
+  if (
+    currentChallengeNum === 0 &&
+    !codeInput.includes("repeat") &&
+    explicitMoveCount > 2
+  ) {
+    ui.showMessage(
+      "Please use repeat() instead of typing move() many times.",
+      "error"
+    );
+    setTimeout(() => window.resetChallenge(), 2000);
+    return;
+  }
+
+  if (currentChallengeNum === 2 && !codeInput.includes("while")) {
+    if (explicitMoveCount > 2) {
+      ui.showMessage(
+        "I see you trying to cheat! 😉 Please use a while() loop... (Move forward as long as path is clear)",
+        "error"
+      );
+    } else {
+      ui.showMessage(
+        "❌ Task failed: You must use a 'while()' loop to solve this level.",
+        "error"
+      );
+    }
+    setTimeout(() => window.resetChallenge(), 2000);
+    return;
+  }
+
+  if (currentChallengeNum === 1 && !codeInput.includes("if(gemAhead")) {
+    ui.showMessage(
+      "❌ Task failed: You must use logic 'if(gemAhead())' to solve this!",
+      "error"
+    );
+    return;
+  }
+
+  game.reset();
+
+  try {
+    let code = codeInput.replace(/\n/g, " ").trim();
+
+    while (code.length > 0) {
+      code = code.trim();
+      let matchFound = false;
+
+      let match = code.match(/^repeat\s*\(\s*(\d+)\s*\)\s*\{/);
+      if (match) {
+        const count = parseInt(match[1]);
+        const blockEnd = findClosingBrace(code, match[0].length);
+        if (blockEnd === -1) throw new Error("Missing closing brace }");
+        const body = code.substring(match[0].length, blockEnd);
+        for (let i = 0; i < count; i++) {
+          await executeBlock(body);
+        }
+        code = code.substring(blockEnd + 1);
+        matchFound = true;
+        continue;
+      }
+
+      match = code.match(/^if\s*\(\s*(\w+)\s*\(\s*\)\s*\)\s*\{/);
+      if (match) {
+        const condition = match[1];
+        const blockEnd = findClosingBrace(code, match[0].length);
+        if (blockEnd === -1) throw new Error("Missing closing brace }");
+        const body = code.substring(match[0].length, blockEnd);
+        let conditionMet = false;
+        if (condition === "gemAhead" && game.gemAhead()) conditionMet = true;
+        if (condition === "pathClear" && game.pathClear()) conditionMet = true;
+        if (conditionMet) await executeBlock(body);
+        code = code.substring(blockEnd + 1);
+        matchFound = true;
+        continue;
+      }
+
+      match = code.match(/^while\s*\(\s*(\w+)\s*\(\s*\)\s*\)\s*\{/);
+      if (match) {
+        const condition = match[1];
+        const blockEnd = findClosingBrace(code, match[0].length);
+        if (blockEnd === -1) throw new Error("Missing closing brace }");
+        const body = code.substring(match[0].length, blockEnd);
+        let loops = 0;
+        while (loops < 20) {
+          let conditionMet = false;
+          if (condition === "pathClear" && game.pathClear())
+            conditionMet = true;
+          if (condition === "gemAhead" && game.gemAhead()) conditionMet = true;
+          if (!conditionMet) break;
+          await executeBlock(body);
+          loops++;
+        }
+        code = code.substring(blockEnd + 1);
+        matchFound = true;
+        continue;
+      }
+
+      match = code.match(/^(move|pickUp|turnLeft|turnRight)\s*\(\s*\);?/);
+      if (match) {
+        const action = match[1];
+        await performAction(action);
+        code = code.substring(match[0].length);
+        matchFound = true;
+        continue;
+      }
+
+      if (!matchFound) code = code.substring(1);
+    }
+
+    if (
+      challenge.requiresGemCollection &&
+      game.variables.gems_collected === 0
+    ) {
+      ui.showMessage(
+        "❌ Task failed: You forgot to pickUp() the gem!",
+        "error"
+      );
+      setTimeout(() => game.reset(), 1000);
+    } else {
+      checkGoal();
+    }
+  } catch (error) {
+    ui.showMessage("Error: " + error.message, "error");
+    setTimeout(() => {
+      game.reset();
+      ui.updateDisplay();
+    }, 1000);
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const introOverlay = document.getElementById("intro-overlay");
+  const completionOverlay = document.getElementById("completion-overlay");
+
+  document.getElementById("start-game-btn").addEventListener("click", () => {
+    introOverlay.classList.remove("active");
+    currentChallengeNum = 0; // Ensure start at 0
+    window.loadLevel(1);
+  });
+
+  document.getElementById("restart-game-btn").addEventListener("click", () => {
+    completionOverlay.classList.remove("active");
+    currentChallengeNum = 0; // Ensure start at 0
+    window.loadLevel(1);
+  });
+
+  document.querySelectorAll(".level-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      // ADDED: Reset challenge to 0 when manually switching levels
+      currentChallengeNum = 0;
+      window.loadLevel(parseInt(btn.dataset.level));
+    });
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (currentLevelNum === 1) {
+      const challengeType = game.currentChallenge
+        ? game.currentChallenge.type
+        : "";
+      let dir = "";
+      if (e.key === "ArrowUp") dir = "up";
+      else if (e.key === "ArrowDown") dir = "down";
+      else if (e.key === "ArrowLeft") dir = "left";
+      else if (e.key === "ArrowRight") dir = "right";
+
+      if (dir) {
+        e.preventDefault();
+        if (challengeType === "variable") window.moveRobot(dir);
+        if (challengeType === "if") window.moveWithSafety(dir);
+        if (challengeType === "function") window.addToSequence(dir);
+      }
+    }
+  });
+
+  if (introOverlay) introOverlay.classList.add("active");
+});
