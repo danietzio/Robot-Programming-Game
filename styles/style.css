@@ -35,7 +35,7 @@ body {
   background: var(--white);
   border-radius: 16px;
   padding: 15px;
-  box-shadow: 0 20px 60px rgba(84, 101, 255, 0.2); /* Tinted shadow */
+  box-shadow: 0 20px 60px rgba(84, 101, 255, 0.2);
   display: flex;
   flex-direction: column;
   max-height: 98vh;
@@ -116,7 +116,7 @@ header h1 {
 }
 
 .tile {
-  background: var(--bg-pale); /* Changed to #e2fdff */
+  background: var(--bg-pale);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -124,12 +124,12 @@ header h1 {
   position: relative;
   font-size: clamp(1.3em, 2.5vw, 1.7em);
   transition: all 0.2s;
-  border: 1px solid var(--light); /* Changed to #bfd7ff */
+  border: 1px solid var(--light);
 }
 
 .tile.safe {
-  background: #b2dadc; /* Uses #e2fdff */
-  border-color: var(--light); /* Uses #bfd7ff */
+  background: #b2dadc;
+  border-color: var(--light);
 }
 
 .tile.danger {
@@ -138,17 +138,21 @@ header h1 {
 }
 
 .tile.wall {
-  background: var(--secondary); /* Changed to #788bff */
-  border-color: var(--primary); /* Changed to #5465ff */
+  background: var(--secondary);
+  border-color: var(--primary);
   opacity: 0.8;
 }
 
 .robot {
-  font-size: clamp(1em, 2vw, 1.3em);
-  transition: all 0.3s ease;
+  width: 70%;
+  height: auto;
+  transition: transform 0.3s ease;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
 }
 
+/* In case we want to turn robot */
+
+/* 
 .robot.north {
   transform: rotate(0deg);
 }
@@ -160,18 +164,18 @@ header h1 {
 }
 .robot.west {
   transform: rotate(-90deg);
-}
+} */
 
 .gem {
-  color: #ffd700;
-  font-size: clamp(0.9em, 1.8vw, 1.1em);
+  width: 50%;
+  height: auto;
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
 }
 
 .flag {
-  color: var(--primary); /* Flag matches theme */
-  font-size: clamp(0.9em, 1.8vw, 1.1em);
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
+  width: 50%;
+  height: auto;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
 }
 
 .controls-panel {
@@ -278,7 +282,7 @@ input[type="checkbox"] {
 }
 
 .code-display {
-  background: #2d2d2d; /* Keep dark for code contrast */
+  background: #2d2d2d;
   color: #f8f8f2;
   padding: 12px;
   border-radius: 6px;
@@ -444,7 +448,7 @@ input[type="checkbox"] {
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(84, 101, 255, 0.8); /* Primary color overlay */
+  background: rgba(84, 101, 255, 0.8);
   display: none;
   align-items: center;
   justify-content: center;

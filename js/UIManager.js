@@ -30,13 +30,15 @@ export class UIManager {
         else if (cell.isWall) tile.classList.add("wall");
 
         let content = "";
+
         if (this.game.robot.x === x && this.game.robot.y === y) {
-          content += `<span class="robot ${this.game.robot.direction}">🤖</span>`;
+          content += `<img src="img/robot.png" class="robot ${this.game.robot.direction}" alt="Robot">`;
         } else if (cell.hasGem) {
-          content += '<span class="gem">💎</span>';
+          content += '<img src="img/gem.png" class="gem" alt="Gem">';
         }
+
         if (cell.hasFlag) {
-          content += '<span class="flag">🚩</span>';
+          content += '<img src="img/flag.png" class="flag" alt="Flag">';
         }
 
         tile.innerHTML = content || "&nbsp;";
