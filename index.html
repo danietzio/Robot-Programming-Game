@@ -63,6 +63,9 @@
 
       <div id="game-container" class="game-container"></div>
 
+      <audio id="bg-music" src="sounds/theme.mp3" loop></audio>
+      <audio id="move-sound" src="sounds/move.mp3"></audio>
+
       <div id="variables-display" class="variables-display">
         <div class="var-item">
           <span class="var-label">Energy:</span>
@@ -71,6 +74,13 @@
         <div class="var-item">
           <span class="var-label">Gems Collected:</span>
           <span id="gems-value" class="var-value">0</span>
+        </div>
+
+        <div class="var-item separator"></div>
+        <div class="var-item">
+          <button id="sound-btn" class="sound-btn" title="Toggle Sound">
+            <img id="sound-icon" src="img/volume.png" alt="Sound On" />
+          </button>
         </div>
       </div>
     </div>

@@ -3,9 +3,11 @@ import { UIManager } from "./UIManager.js";
 import { level1Challenges } from "./levels/level1.js";
 import { level2Puzzles } from "./levels/level2.js";
 import { level3Challenges } from "./levels/level3.js";
+import { SoundManager } from "./SoundManager.js";
 
 const game = new RobotGame();
 const ui = new UIManager(game);
+const sound = new SoundManager();
 
 let currentLevelNum = 1;
 let currentChallengeNum = 0;
@@ -31,7 +33,6 @@ function nextChallenge() {
       window.loadLevel(1);
     } else {
       ui.showMessage("Level 1 Complete! Moving to Level 2...", "success");
-      // Reset challenge num for the NEW level
       currentChallengeNum = 0;
       setTimeout(() => window.loadLevel(2), 1500);
     }
@@ -41,7 +42,6 @@ function nextChallenge() {
       window.loadLevel(2);
     } else {
       ui.showMessage("Level 2 Complete! Moving to Level 3...", "success");
-      // Reset challenge num for the NEW level
       currentChallengeNum = 0;
       setTimeout(() => window.loadLevel(3), 1500);
     }
@@ -55,10 +55,8 @@ function nextChallenge() {
   }
 }
 
-// --- MODIFIED FUNCTION ---
 window.loadLevel = (levelNum) => {
   currentLevelNum = levelNum;
-  // REMOVED: currentChallengeNum = 0;  <-- This was the bug causing the loop!
 
   document.querySelectorAll(".level-btn").forEach((btn) => {
     btn.classList.remove("active");
@@ -102,6 +100,7 @@ window.moveRobot = (direction) => {
     if (direction === "right") game.robot.direction = "east";
 
     game.move();
+    sound.playMove();
     ui.updateDisplay();
     checkGoal();
   } catch (error) {
@@ -148,6 +147,7 @@ window.moveWithSafety = (direction) => {
     } else {
       try {
         game.move();
+        sound.playMove();
         ui.showMessage("Safety System Active: Path clear. Moving.", "success");
       } catch (e) {
         ui.showMessage(e.message, "error");
@@ -158,6 +158,7 @@ window.moveWithSafety = (direction) => {
     if (nextTile.isDanger) {
       try {
         game.move();
+        sound.playMove();
         ui.updateDisplay();
         ui.showMessage(
           "❌ CRITICAL: Safety was OFF! Robot stepped on danger.",
@@ -171,6 +172,7 @@ window.moveWithSafety = (direction) => {
     } else {
       try {
         game.move();
+        sound.playMove();
       } catch (e) {
         ui.showMessage(e.message, "error");
         setTimeout(window.resetChallenge, 1000);
@@ -195,6 +197,7 @@ window.executeLoop = async () => {
     for (let i = 0; i < count; i++) {
       game.pickUp();
       game.move();
+      sound.playMove();
       ui.updateDisplay();
       await game.delay(400);
     }
@@ -233,6 +236,7 @@ window.executePatrol = async () => {
       else if (dir === "right") game.robot.direction = "east";
 
       game.move();
+      sound.playMove();
       ui.updateDisplay();
       await game.delay(400);
     }
@@ -286,6 +290,7 @@ window.executeLevel2 = async () => {
         typeof answers[0] === "number" ? answers[0] : answers[1] || 3;
       for (let i = 0; i < count; i++) {
         game.move();
+        sound.playMove();
         if (puzzle.title.includes("Loop Count")) game.pickUp();
         ui.updateDisplay();
         await game.delay(400);
@@ -294,6 +299,7 @@ window.executeLevel2 = async () => {
       if (game.gemAhead()) {
         await game.delay(200);
         game.move();
+        sound.playMove();
         ui.updateDisplay();
         await game.delay(400);
         game.pickUp();
@@ -303,12 +309,14 @@ window.executeLevel2 = async () => {
     } else if (keyword === "while") {
       while (game.variables.energy > 0 && game.robot.x < 4) {
         game.move();
+        sound.playMove();
         ui.updateDisplay();
         await game.delay(300);
       }
       game.robot.direction = "north";
       while (game.variables.energy > 0 && game.robot.y > 0) {
         game.move();
+        sound.playMove();
         ui.updateDisplay();
         await game.delay(300);
       }
@@ -321,7 +329,10 @@ window.executeLevel2 = async () => {
 };
 
 async function performAction(action) {
-  if (action === "move") game.move();
+  if (action === "move") {
+    game.move();
+    sound.playMove();
+  }
   if (action === "pickUp") game.pickUp();
   if (action === "turnLeft") game.robot.direction = "west";
   if (action === "turnRight") game.robot.direction = "east";
@@ -493,19 +504,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("start-game-btn").addEventListener("click", () => {
     introOverlay.classList.remove("active");
-    currentChallengeNum = 0; // Ensure start at 0
+    currentChallengeNum = 0;
     window.loadLevel(1);
+    sound.playTheme();
   });
 
   document.getElementById("restart-game-btn").addEventListener("click", () => {
     completionOverlay.classList.remove("active");
-    currentChallengeNum = 0; // Ensure start at 0
+    currentChallengeNum = 0;
     window.loadLevel(1);
+    sound.playTheme();
   });
 
   document.querySelectorAll(".level-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      // ADDED: Reset challenge to 0 when manually switching levels
       currentChallengeNum = 0;
       window.loadLevel(parseInt(btn.dataset.level));
     });
