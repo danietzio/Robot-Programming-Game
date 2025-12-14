@@ -22,7 +22,40 @@ function getCurrentChallengeObject() {
 function checkGoal() {
   if (game.checkGoal()) {
     ui.showMessage("🎉 Success! Goal achieved!", "success");
-    setTimeout(nextChallenge, 2000);
+    
+    // Check if this is the last challenge of a level
+    const isLevel1Complete = currentLevelNum === 1 && currentChallengeNum >= level1Challenges.length - 1;
+    const isLevel2Complete = currentLevelNum === 2 && currentChallengeNum >= level2Puzzles.length - 1;
+    const isLevel3Complete = currentLevelNum === 3 && currentChallengeNum >= level3Challenges.length - 1;
+    
+    if (isLevel1Complete || isLevel2Complete || isLevel3Complete) {
+      setTimeout(showSuccessPopup, 1000);
+    } else {
+      // Just proceed to next challenge automatically
+      setTimeout(nextChallenge, 2000);
+    }
+  }
+}
+
+function showSuccessPopup() {
+  const overlay = document.getElementById("level-success-overlay");
+  const titleEl = document.getElementById("success-title");
+  const messageEl = document.getElementById("success-message");
+  const nextBtn = document.getElementById("next-level-btn");
+  
+  if (currentLevelNum === 1 && currentChallengeNum >= level1Challenges.length - 1) {
+    titleEl.textContent = "Level 1 Complete! 🎉";
+    messageEl.textContent = "You've mastered the basics! Ready for more complex challenges?";
+    nextBtn.textContent = "Continue to Level 2";
+    overlay.classList.add("active");
+  } else if (currentLevelNum === 2 && currentChallengeNum >= level2Puzzles.length - 1) {
+    titleEl.textContent = "Level 2 Complete! 🎉";
+    messageEl.textContent = "Great job with code combinations! Time to write your own code!";
+    nextBtn.textContent = "Continue to Level 3";
+    overlay.classList.add("active");
+  } else if (currentLevelNum === 3 && currentChallengeNum >= level3Challenges.length - 1) {
+    // Show the game completion overlay instead
+    document.getElementById("completion-overlay").classList.add("active");
   }
 }
 
@@ -501,6 +534,7 @@ window.executeLevel3 = async () => {
 document.addEventListener("DOMContentLoaded", () => {
   const introOverlay = document.getElementById("intro-overlay");
   const completionOverlay = document.getElementById("completion-overlay");
+  const levelSuccessOverlay = document.getElementById("level-success-overlay");
 
   document.getElementById("start-game-btn").addEventListener("click", () => {
     introOverlay.classList.remove("active");
@@ -514,6 +548,11 @@ document.addEventListener("DOMContentLoaded", () => {
     currentChallengeNum = 0;
     window.loadLevel(1);
     sound.playTheme();
+  });
+
+  document.getElementById("next-level-btn").addEventListener("click", () => {
+    levelSuccessOverlay.classList.remove("active");
+    nextChallenge();
   });
 
   document.querySelectorAll(".level-btn").forEach((btn) => {
