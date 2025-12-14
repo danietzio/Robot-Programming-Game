@@ -113,6 +113,10 @@ header h1 {
   border: 2px solid var(--light);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   align-self: flex-start;
+  position: sticky;
+  top: 10px;
+  z-index: 10;
+  max-height: calc(100vh - 250px);
 }
 
 .tile {
@@ -546,6 +550,9 @@ input[type="checkbox"] {
   .game-grid {
     grid-template-columns: repeat(5, minmax(40px, 55px));
     grid-template-rows: repeat(5, minmax(40px, 55px));
+    position: sticky;
+    top: 5px;
+    max-height: calc(100vh - 200px);
   }
 
   .controls-panel {
