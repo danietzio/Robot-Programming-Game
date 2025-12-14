@@ -1,3 +1,5 @@
+import { conceptExplanations } from "./concepts.js";
+
 export class UIManager {
   constructor(gameInstance) {
     this.game = gameInstance;
@@ -6,6 +8,7 @@ export class UIManager {
     this.gemsVal = document.getElementById("gems-value");
     this.messageDiv = document.getElementById("message");
     this.container = document.getElementById("game-container");
+    this.conceptsShown = new Set(); // Track which concepts have been shown
   }
 
   updateDisplay() {
@@ -47,14 +50,52 @@ export class UIManager {
     }
   }
 
-  showMessage(text, type) {
+  showMessage(text, type, explanation = null, tip = null) {
     if (!this.messageDiv) return;
     this.messageDiv.className = `message ${type}`;
-    this.messageDiv.textContent = text;
+    
+    let messageHTML = `<div class="message-text">${text}</div>`;
+    if (explanation) {
+      messageHTML += `<div class="message-explanation">${explanation}</div>`;
+    }
+    if (tip) {
+      messageHTML += `<div class="message-tip">${tip}</div>`;
+    }
+    
+    this.messageDiv.innerHTML = messageHTML;
+  }
+
+  renderConceptBox(conceptKey) {
+    // Only show concept box once per concept type
+    if (this.conceptsShown.has(conceptKey)) {
+      return "";
+    }
+    
+    const concept = conceptExplanations[conceptKey];
+    if (!concept) return "";
+    
+    this.conceptsShown.add(conceptKey);
+    
+    return `
+      <div class="concept-box" id="concept-${conceptKey}">
+        <div class="concept-header">
+          <span class="concept-icon">📚</span>
+          <h3 class="concept-title">${concept.title}</h3>
+          <button class="concept-close" onclick="this.parentElement.parentElement.style.display='none'">×</button>
+        </div>
+        <div class="concept-content">
+          <p>${concept.explanation}</p>
+        </div>
+      </div>
+    `;
   }
 
   loadLevelUI(levelNum, challenge, currentChallengeNum) {
     this.container.innerHTML = "";
+    // Reset concepts shown when loading a new level
+    if (currentChallengeNum === 0) {
+      this.conceptsShown.clear();
+    }
     let htmlContent = "";
 
     if (levelNum === 1) {
@@ -64,6 +105,7 @@ export class UIManager {
       htmlContent = `
                 <div class="game-grid" id="grid-container"></div>
                 <div class="controls-panel">
+                    ${this.renderConceptBox(challenge.type)}
                     <div class="challenge-title">${challenge.title}</div>
                     <div class="challenge-description">${
                       challenge.description
@@ -77,9 +119,16 @@ export class UIManager {
       if (currentChallengeNum === 0 || currentChallengeNum === 1)
         resetButtonHTML = "";
 
+      // Determine concept type based on puzzle
+      let conceptKey = "";
+      if (challenge.code.includes("repeat")) conceptKey = "repeat";
+      else if (challenge.code.includes("while")) conceptKey = "while";
+      else if (challenge.code.includes("if")) conceptKey = "if";
+
       htmlContent = `
                 <div class="game-grid" id="grid-container"></div>
                 <div class="controls-panel">
+                    ${conceptKey ? this.renderConceptBox(conceptKey) : ""}
                     <div class="challenge-title">${challenge.title}</div>
                     <div class="challenge-description">${
                       challenge.description
@@ -94,6 +143,12 @@ export class UIManager {
                     <div id="message"></div>
                 </div>`;
     } else if (levelNum === 3) {
+      // Determine concept type based on challenge
+      let conceptKey = "";
+      if (challenge.title.includes("Loop") && challenge.title.includes("While")) conceptKey = "while";
+      else if (challenge.title.includes("Loop")) conceptKey = "repeat";
+      else if (challenge.title.includes("Logic") || challenge.description.includes("if")) conceptKey = "if";
+
       htmlContent = `
                 <div class="game-grid" id="grid-container"></div>
                 <div class="controls-panel">
@@ -104,6 +159,7 @@ export class UIManager {
                             if(condition){ } &nbsp; while(condition){ }
                         </div>
                     </div>
+                    ${conceptKey ? this.renderConceptBox(conceptKey) : ""}
                     <div class="challenge-title">${challenge.title}</div>
                     <div class="challenge-description">${challenge.description}</div>
                     <div class="control-group">

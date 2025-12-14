@@ -1,3 +1,5 @@
+import { errorMessages } from "./concepts.js";
+
 export class RobotGame {
   constructor() {
     this.grid = [];
@@ -9,6 +11,8 @@ export class RobotGame {
     this.levelConfig = null;
     this.functions = {};
     this.sequence = [];
+    this.initialEnergy = 10;
+    this.movesUsed = 0;
   }
 
   initGrid(size = 5) {
@@ -32,7 +36,9 @@ export class RobotGame {
     this.levelConfig = config;
     this.initGrid(5);
     this.variables.energy = config.startEnergy || 10;
+    this.initialEnergy = config.startEnergy || 10;
     this.variables.gems_collected = 0;
+    this.movesUsed = 0;
     this.robot = {
       ...config.startPos,
       direction: config.startDirection || "east",
@@ -61,7 +67,8 @@ export class RobotGame {
 
   move() {
     if (this.variables.energy <= 0) {
-      throw new Error("No energy left!");
+      const error = errorMessages.noEnergy;
+      throw new Error(`${error.message}|${error.explanation}|${error.tip}`);
     }
 
     let newX = this.robot.x;
@@ -83,18 +90,33 @@ export class RobotGame {
     }
 
     if (newX < 0 || newX >= 5 || newY < 0 || newY >= 5) {
-      throw new Error("Robot hit the boundary!");
+      const error = errorMessages.hitBoundary;
+      throw new Error(`${error.message}|${error.explanation}|${error.tip}`);
     }
 
     if (this.grid[newY][newX].isWall) {
-      throw new Error("Robot hit a wall!");
+      const error = errorMessages.hitWall;
+      throw new Error(`${error.message}|${error.explanation}|${error.tip}`);
     }
 
     this.robot.x = newX;
     this.robot.y = newY;
     this.variables.energy--;
+    this.movesUsed++;
 
     return true;
+  }
+
+  getEnergyEfficiency() {
+    const energyUsed = this.initialEnergy - this.variables.energy;
+    const optimalEnergy = this.levelConfig?.optimalEnergy || energyUsed;
+    const efficiency = optimalEnergy > 0 ? (optimalEnergy / energyUsed) * 100 : 100;
+    return {
+      energyUsed,
+      optimalEnergy,
+      efficiency: Math.min(100, Math.round(efficiency)),
+      isOptimal: energyUsed <= optimalEnergy
+    };
   }
 
   pickUp() {
@@ -185,6 +207,7 @@ export class RobotGame {
     this.setLevelConfig(this.levelConfig);
     this.functions = savedFunctions;
     this.sequence = savedSequence;
+    this.movesUsed = 0;
   }
 
   checkGoal() {

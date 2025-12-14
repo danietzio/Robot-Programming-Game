@@ -7,6 +7,7 @@ export const level1Challenges = [
       startPos: { x: 0, y: 0 },
       startDirection: "east",
       startEnergy: 8, // Optimal path is 8 moves (4 right + 4 down)
+      optimalEnergy: 8,
       elements: [{ type: "flag", x: 4, y: 4 }],
       goal: { type: "reachFlag" },
     },
@@ -20,6 +21,7 @@ export const level1Challenges = [
       startPos: { x: 0, y: 2 },
       startDirection: "east",
       startEnergy: 4, // Exactly 4 moves needed
+      optimalEnergy: 4,
       elements: [
         { type: "gem", x: 0, y: 2 },
         { type: "gem", x: 1, y: 2 },
@@ -38,7 +40,8 @@ export const level1Challenges = [
     config: {
       startPos: { x: 0, y: 2 },
       startDirection: "east",
-      startEnergy: 5, // Need to skip danger tile, so 4 moves + 1 buffer
+      startEnergy: 7, // Need to skip danger tile, so 4 moves + 1 buffer
+      optimalEnergy: 6,
       elements: [
         { type: "safe", x: 0, y: 2 },
         { type: "safe", x: 1, y: 2 },
@@ -59,6 +62,7 @@ export const level1Challenges = [
       startPos: { x: 0, y: 0 },
       startDirection: "east",
       startEnergy: 4, // Optimal: 2 right + 2 down = 4 moves
+      optimalEnergy: 4,
       elements: [{ type: "flag", x: 2, y: 2 }],
       goal: { type: "reachFlag" },
     },

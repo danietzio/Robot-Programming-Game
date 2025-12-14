@@ -8,6 +8,7 @@ export const level3Challenges = [
       startPos: { x: 0, y: 2 },
       startDirection: "east",
       startEnergy: 4, // Exactly 4 moves needed
+      optimalEnergy: 4,
       elements: [{ type: "flag", x: 4, y: 2 }],
       goal: { type: "reachFlag" },
     },
@@ -22,6 +23,7 @@ export const level3Challenges = [
       startPos: { x: 0, y: 2 },
       startDirection: "east",
       startEnergy: 2, // Need 2 moves to reach flag
+      optimalEnergy: 2,
       elements: [
         { type: "gem", x: 1, y: 2 },
         { type: "flag", x: 2, y: 2 },
@@ -39,6 +41,7 @@ export const level3Challenges = [
       startPos: { x: 0, y: 2 },
       startDirection: "east",
       startEnergy: 3, // Exactly 3 moves to reach flag before wall
+      optimalEnergy: 3,
       elements: [
         { type: "wall", x: 4, y: 2 },
         { type: "flag", x: 3, y: 2 },

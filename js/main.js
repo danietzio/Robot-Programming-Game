@@ -4,6 +4,7 @@ import { level1Challenges } from "./levels/level1.js";
 import { level2Puzzles } from "./levels/level2.js";
 import { level3Challenges } from "./levels/level3.js";
 import { SoundManager } from "./SoundManager.js";
+import { conceptExplanations, errorMessages } from "./concepts.js";
 
 const game = new RobotGame();
 const ui = new UIManager(game);
@@ -21,7 +22,44 @@ function getCurrentChallengeObject() {
 
 function checkGoal() {
   if (game.checkGoal()) {
+    // Show energy efficiency feedback
+    const efficiency = game.getEnergyEfficiency();
+    let efficiencyMsg = "";
+    if (efficiency.isOptimal) {
+      efficiencyMsg = `<div class="energy-feedback efficient">✨ Perfect! You used exactly ${efficiency.energyUsed} energy (optimal solution!)</div>`;
+    } else if (efficiency.efficiency >= 80) {
+      efficiencyMsg = `<div class="energy-feedback efficient">Great job! You used ${efficiency.energyUsed} energy (${efficiency.efficiency}% efficient)</div>`;
+    } else {
+      efficiencyMsg = `<div class="energy-feedback inefficient">💡 You used ${efficiency.energyUsed} energy. Optimal solution uses ${efficiency.optimalEnergy}. Try to be more efficient!</div>`;
+    }
+    
+    // Show "Why This Matters" section
+    const challenge = getCurrentChallengeObject();
+    let conceptKey = "";
+    if (challenge.type) conceptKey = challenge.type;
+    else if (challenge.code?.includes("repeat")) conceptKey = "repeat";
+    else if (challenge.code?.includes("while")) conceptKey = "while";
+    else if (challenge.code?.includes("if")) conceptKey = "if";
+    
+    const concept = conceptExplanations[conceptKey];
+    let whyMattersHTML = "";
+    if (concept && concept.whyItMatters) {
+      whyMattersHTML = `
+        <div class="why-matters-box">
+          <div class="why-matters-title">💡 Why This Matters:</div>
+          <div class="why-matters-content">${concept.whyItMatters}</div>
+        </div>
+      `;
+    }
+    
     ui.showMessage("🎉 Success! Goal achieved!", "success");
+    
+    // Add efficiency and why matters to message div
+    setTimeout(() => {
+      if (ui.messageDiv) {
+        ui.messageDiv.innerHTML += efficiencyMsg + whyMattersHTML;
+      }
+    }, 100);
     
     // Check if this is the last challenge of a level
     const isLevel1Complete = currentLevelNum === 1 && currentChallengeNum >= level1Challenges.length - 1;
@@ -29,10 +67,10 @@ function checkGoal() {
     const isLevel3Complete = currentLevelNum === 3 && currentChallengeNum >= level3Challenges.length - 1;
     
     if (isLevel1Complete || isLevel2Complete || isLevel3Complete) {
-      setTimeout(showSuccessPopup, 1000);
+      setTimeout(showSuccessPopup, 2000);
     } else {
       // Just proceed to next challenge automatically
-      setTimeout(nextChallenge, 2000);
+      setTimeout(nextChallenge, 3000);
     }
   }
 }
@@ -125,6 +163,15 @@ window.toggleHint = () => {
   document.getElementById("hint-box").classList.toggle("show");
 };
 
+function parseError(errorMessage) {
+  const parts = errorMessage.split("|");
+  return {
+    message: parts[0] || errorMessage,
+    explanation: parts[1] || null,
+    tip: parts[2] || null
+  };
+}
+
 window.moveRobot = (direction) => {
   try {
     if (direction === "up") game.robot.direction = "north";
@@ -137,11 +184,11 @@ window.moveRobot = (direction) => {
     ui.updateDisplay();
     checkGoal();
   } catch (error) {
-    ui.showMessage(error.message, "error");
+    const errorInfo = parseError(error.message);
+    ui.showMessage(errorInfo.message, "error", errorInfo.explanation, errorInfo.tip);
     setTimeout(() => {
       window.resetChallenge();
-      ui.showMessage("Resetting...", "error");
-    }, 1000);
+    }, 2000);
   }
 };
 
@@ -183,8 +230,9 @@ window.moveWithSafety = (direction) => {
         sound.playMove();
         ui.showMessage("Safety System Active: Path clear. Moving.", "success");
       } catch (e) {
-        ui.showMessage(e.message, "error");
-        setTimeout(window.resetChallenge, 1000);
+        const errorInfo = parseError(e.message);
+        ui.showMessage(errorInfo.message, "error", errorInfo.explanation, errorInfo.tip);
+        setTimeout(window.resetChallenge, 2000);
       }
     }
   } else {
@@ -195,20 +243,24 @@ window.moveWithSafety = (direction) => {
         ui.updateDisplay();
         ui.showMessage(
           "❌ CRITICAL: Safety was OFF! Robot stepped on danger.",
-          "error"
+          "error",
+          "When Safety Mode is OFF, the robot doesn't check for danger before moving. Always use Safety Mode (IF checks) to avoid crashes!",
+          "💡 Tip: Turn ON Safety Mode to use conditional logic and prevent accidents!"
         );
-        setTimeout(() => window.resetChallenge(), 1000);
+        setTimeout(() => window.resetChallenge(), 2000);
       } catch (e) {
-        ui.showMessage(e.message, "error");
-        setTimeout(window.resetChallenge, 1000);
+        const errorInfo = parseError(e.message);
+        ui.showMessage(errorInfo.message, "error", errorInfo.explanation, errorInfo.tip);
+        setTimeout(window.resetChallenge, 2000);
       }
     } else {
       try {
         game.move();
         sound.playMove();
       } catch (e) {
-        ui.showMessage(e.message, "error");
-        setTimeout(window.resetChallenge, 1000);
+        const errorInfo = parseError(e.message);
+        ui.showMessage(errorInfo.message, "error", errorInfo.explanation, errorInfo.tip);
+        setTimeout(window.resetChallenge, 2000);
       }
     }
   }
@@ -304,7 +356,8 @@ window.executeLevel2 = async () => {
   });
 
   if (!allCorrect) {
-    ui.showMessage("Incorrect parameters/keywords. Try again!", "error");
+    const error = errorMessages.wrongAnswer;
+    ui.showMessage(error.message, "error", error.explanation, error.tip);
     return;
   }
 
@@ -356,8 +409,9 @@ window.executeLevel2 = async () => {
     }
     checkGoal();
   } catch (error) {
-    ui.showMessage(error.message, "error");
-    setTimeout(() => game.reset(), 1000);
+    const errorInfo = parseError(error.message);
+    ui.showMessage(errorInfo.message, "error", errorInfo.explanation, errorInfo.tip);
+    setTimeout(() => game.reset(), 2000);
   }
 };
 
@@ -523,11 +577,17 @@ window.executeLevel3 = async () => {
       checkGoal();
     }
   } catch (error) {
-    ui.showMessage("Error: " + error.message, "error");
+    const errorInfo = parseError(error.message);
+    if (errorInfo.message.includes("Missing closing brace")) {
+      const syntaxError = errorMessages.missingSyntax;
+      ui.showMessage(syntaxError.message, "error", syntaxError.explanation, syntaxError.tip);
+    } else {
+      ui.showMessage(errorInfo.message, "error", errorInfo.explanation, errorInfo.tip);
+    }
     setTimeout(() => {
       game.reset();
       ui.updateDisplay();
-    }, 1000);
+    }, 2000);
   }
 };
 
