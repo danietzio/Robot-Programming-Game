@@ -7,7 +7,7 @@ export class SoundManager {
 
     this.isMuted = false;
 
-    if (this.bgMusic) this.bgMusic.volume = 0.3;
+    if (this.bgMusic) this.bgMusic.volume = 0.2;
     if (this.moveSound) this.moveSound.volume = 0.5;
 
     this.initListeners();

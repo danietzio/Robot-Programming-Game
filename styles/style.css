@@ -30,7 +30,7 @@ body {
 }
 
 .container {
-  width: 100%;
+  transform: scale(0.88);
   max-width: 1400px;
   background: var(--white);
   border-radius: 16px;
@@ -744,19 +744,28 @@ input[type="checkbox"] {
 }
 
 .success-popup::before {
-  content: '';
+  content: "";
   position: absolute;
   top: -50%;
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(84, 101, 255, 0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(84, 101, 255, 0.1) 0%,
+    transparent 70%
+  );
   animation: shimmer 2s infinite;
 }
 
 @keyframes shimmer {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(180deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
 }
 
 .success-icon {
@@ -766,8 +775,12 @@ input[type="checkbox"] {
 }
 
 @keyframes bounce {
-  from { transform: translateY(0); }
-  to { transform: translateY(-10px); }
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-10px);
+  }
 }
 
 .success-popup h2 {
@@ -790,6 +803,11 @@ input[type="checkbox"] {
 }
 
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 4px 15px rgba(84, 101, 255, 0.4); }
-  50% { box-shadow: 0 4px 25px rgba(84, 101, 255, 0.7); }
+  0%,
+  100% {
+    box-shadow: 0 4px 15px rgba(84, 101, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(84, 101, 255, 0.7);
+  }
 }
